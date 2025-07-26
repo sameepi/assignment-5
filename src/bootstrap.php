@@ -41,9 +41,27 @@ try {
     die('Error loading .env file: ' . $e->getMessage());
 }
 
+// Load environment variables
 require_once __DIR__ . '/helpers.php';
 
-// Generate CSRF token if it doesn't exist
+// Use Composer's autoloader if available, otherwise fall back to custom autoloader
+if (file_exists(dirname(__DIR__) . '/vendor/autoload.php')) {
+    require_once dirname(__DIR__) . '/vendor/autoload.php';
+} else {
+    // Fallback to custom autoloader if Composer's autoloader is not available
+    require_once __DIR__ . '/autoload.php';
+}
+
 use App\Core\Session;
-Session::start();
-Session::generateCsrfToken();
+
+// Make sure session is started before generating CSRF token
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Generate CSRF token if it doesn't exist
+if (class_exists('App\\Core\\Session')) {
+    Session::generateCsrfToken();
+} else {
+    error_log('Warning: App\\Core\\Session class not found. CSRF token generation skipped.');
+}
