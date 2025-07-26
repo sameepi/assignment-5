@@ -2,28 +2,55 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../vendor/autoload.php';
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
+require_once dirname(__DIR__) . '/src/bootstrap.php';
+
+require_once dirname(__DIR__) . '/src/autoload.php';
 
 use App\Controllers\MovieController;
 use App\Core\Database;
 use App\Core\Router;
 use App\Core\Session;
 
-// Start session
 Session::start();
 
-// Initialize database
-$database = new Database();
-$pdo = $database->getConnection();
+try {
+    $database = new Database();
+    $pdo = $database->getConnection();
+} catch (Exception $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
 
-// Initialize router
 $router = new Router();
 
-// Define routes following instructor's structure
 $router->get('/', [MovieController::class, 'index']);
 $router->get('/movie', [MovieController::class, 'index']);
+$router->get('/movie/search', [MovieController::class, 'search']);
 $router->post('/movie/search', [MovieController::class, 'search']);
 $router->get('/movie/review/{title}/{rating}', [MovieController::class, 'review']);
 
-// Handle the request
-$router->handleRequest($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
+$requestMethod = $_SERVER['REQUEST_METHOD'];
+
+$requestUri = '/';
+if (isset($_GET['url'])) {
+    $requestUri = '/' . trim($_GET['url'], '/');
+    if (empty($requestUri)) {
+        $requestUri = '/';
+    }
+}
+
+error_log("Handling request: $requestMethod $requestUri");
+
+try {
+    $router->handleRequest($requestUri, $requestMethod);
+} catch (Exception $e) {
+    http_response_code(500);
+    echo "<h1>500 Internal Server Error</h1>";
+    echo "<p>An error occurred: " . htmlspecialchars($e->getMessage()) . "</p>";
+    if (ini_get('display_errors')) {
+        echo "<pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
+    }
+    error_log("Error handling request: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+}

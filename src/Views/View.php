@@ -23,6 +23,21 @@ final class View
             throw new Exception("View file not found: {$viewFile}");
         }
 
+        // Make url() helper available in views
+        if (!function_exists('url')) {
+            function url(string $path = ''): string
+            {
+                static $baseUrl = null;
+                
+                if ($baseUrl === null) {
+                    $baseUrl = rtrim($_ENV['APP_URL'] ?? 'http://localhost', '/');
+                }
+                
+                $path = ltrim($path, '/');
+                return $baseUrl . ($path ? '/' . $path : '');
+            }
+        }
+
         // Extract data to variables
         extract($data, EXTR_SKIP);
 

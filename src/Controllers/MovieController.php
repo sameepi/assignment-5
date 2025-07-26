@@ -37,12 +37,13 @@ final class MovieController
 
     public function search(): void
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirectWithError('Invalid request method');
-            return;
+        // Handle both GET and POST requests
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $movieTitle = trim($_POST['title'] ?? '');
+        } else {
+            // Handle GET request (from popular search links)
+            $movieTitle = trim($_GET['title'] ?? '');
         }
-
-        $movieTitle = trim($_POST['movie_title'] ?? '');
 
         // Following instructor's empty validation
         if (empty($movieTitle)) {

@@ -39,6 +39,7 @@ final class Router
             }
 
             $pattern = $this->convertToRegex($route['path']);
+            
             if (preg_match($pattern, $path, $matches)) {
                 $this->callHandler($route['handler'], array_slice($matches, 1));
                 return;
