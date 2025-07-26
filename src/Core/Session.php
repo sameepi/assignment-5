@@ -63,4 +63,28 @@ final class Session
         }
         return $message;
     }
+
+    /**
+     * Generate a CSRF token if one doesn't exist
+     */
+    public static function generateCsrfToken(): string
+    {
+        self::start();
+        if (empty($_SESSION['_token'])) {
+            $_SESSION['_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['_token'];
+    }
+
+    /**
+     * Validate a CSRF token
+     */
+    public static function validateCsrfToken(string $token): bool
+    {
+        self::start();
+        if (empty($_SESSION['_token'])) {
+            return false;
+        }
+        return hash_equals($_SESSION['_token'], $token);
+    }
 }

@@ -39,6 +39,7 @@ $router->get('/movie', [MovieController::class, 'index']);
 $router->get('/movie/search', [MovieController::class, 'search']);
 $router->post('/movie/search', [MovieController::class, 'search']);
 $router->get('/movie/review/{title}/{rating}', [MovieController::class, 'review']);
+$router->post('/movie/review/{title}/{rating}', [MovieController::class, 'review']);
 
 $requestMethod = $_SERVER['REQUEST_METHOD'];
 

@@ -42,3 +42,8 @@ try {
 }
 
 require_once __DIR__ . '/helpers.php';
+
+// Generate CSRF token if it doesn't exist
+use App\Core\Session;
+Session::start();
+Session::generateCsrfToken();

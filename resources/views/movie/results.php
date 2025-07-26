@@ -135,43 +135,51 @@ function rateMovie(rating) {
         </div>
     `;
     
-    // Send rating to server
-    fetch('/movie/rate', {
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    
+    // Send rating to server using the url() helper
+    fetch(url(`/movie/review/${encodeURIComponent(movieTitle)}/${rating}`), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': csrfToken
         },
-        body: JSON.stringify({
-            movie: movieTitle,
-            rating: rating
-        })
+        credentials: 'same-origin'
     })
-    .then(response => response.json())
+    .then(async response => {
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to submit rating');
+        }
+        return response.json();
+    })
     .then(data => {
-        if (data.success) {
-            messageDiv.innerHTML = `
-                <div class="alert alert-success">
-                    <i class="bi bi-check-circle-fill"></i> 
-                    ${data.message || 'Rating submitted successfully!'}
-                </div>
-            `;
-            
-            // Show AI review section
-            const aiReviewSection = document.getElementById('aiReviewSection');
+        messageDiv.innerHTML = `
+            <div class="alert alert-success">
+                <i class="bi bi-check-circle-fill"></i> 
+                Thanks! You rated ${movieTitle} ${rating} out of 5 stars.
+            </div>
+        `;
+        
+        // Show AI review section if we have a review
+        const aiReviewSection = document.getElementById('aiReviewSection');
+        if (aiReviewSection) {
             aiReviewSection.classList.remove('d-none');
             
             // Scroll to review section
             setTimeout(() => {
                 aiReviewSection.scrollIntoView({ behavior: 'smooth' });
                 
-                // Simulate AI review generation (in a real app, this would be an API call)
-                setTimeout(() => {
-                    generateAIReview(movieTitle, rating);
-                }, 1000);
+                // Display the AI review if available
+                if (data.review) {
+                    const reviewContent = document.getElementById('aiReviewContent');
+                    if (reviewContent) {
+                        reviewContent.textContent = data.review;
+                    }
+                }
             }, 500);
-            
-        } else {
-            throw new Error(data.error || 'Failed to submit rating');
         }
     })
     .catch(error => {
@@ -179,7 +187,7 @@ function rateMovie(rating) {
         messageDiv.innerHTML = `
             <div class="alert alert-danger">
                 <i class="bi bi-exclamation-triangle-fill"></i> 
-                Error: ${error.message || 'Failed to submit rating. Please try again.'}
+                ${error.message || 'Failed to submit rating. Please try again.'}
             </div>
         `;
         currentRating = 0;

@@ -113,9 +113,10 @@ function updateStarRating(container, rating, isHover = false) {
     }
 }
 
-function submitMovieRating(rating) {
+async function submitMovieRating(rating) {
     const movieTitle = document.querySelector('h1')?.textContent || 'this movie';
     const messageContainer = document.getElementById('ratingMessage');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     
     if (!messageContainer) return;
     
@@ -127,9 +128,27 @@ function submitMovieRating(rating) {
         </div>
     `;
     
-    // In a real app, this would be an AJAX call to your backend
-    // For now, we'll simulate a successful response
-    setTimeout(() => {
+    try {
+        // Use the url() helper to generate the correct URL
+        const response = await fetch(url(`/movie/review/${encodeURIComponent(movieTitle)}/${rating}`), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ _token: csrfToken })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to submit rating');
+        }
+
+        // Show success message
         messageContainer.innerHTML = `
             <div class="alert alert-success">
                 <i class="bi bi-check-circle-fill me-2"></i>
@@ -137,16 +156,27 @@ function submitMovieRating(rating) {
             </div>
         `;
         
-        // Show AI review section if it exists
+        // Show AI review section if it exists and we have a review
         const aiReviewSection = document.getElementById('aiReviewSection');
-        if (aiReviewSection) {
+        if (aiReviewSection && data.review) {
             aiReviewSection.classList.remove('d-none');
             aiReviewSection.scrollIntoView({ behavior: 'smooth' });
             
-            // Generate AI review (simulated)
-            generateAIReview(movieTitle, rating);
+            // Display the AI review
+            const reviewContent = document.getElementById('aiReviewContent');
+            if (reviewContent) {
+                reviewContent.textContent = data.review;
+            }
         }
-    }, 1000);
+    } catch (error) {
+        console.error('Error submitting rating:', error);
+        messageContainer.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                ${error.message || 'Failed to submit rating. Please try again.'}
+            </div>
+        `;
+    }
 }
 
 function generateAIReview(movieTitle, rating) {
