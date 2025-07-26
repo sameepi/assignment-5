@@ -37,4 +37,30 @@ final class Session
     {
         session_destroy();
     }
-}   
+
+    public static function setFlash(string $key, string $message): void
+    {
+        self::start();
+        if (!isset($_SESSION['_flash'])) {
+            $_SESSION['_flash'] = [];
+        }
+        $_SESSION['_flash'][$key] = $message;
+    }
+
+    public static function hasFlash(string $key): bool
+    {
+        self::start();
+        return isset($_SESSION['_flash'][$key]);
+    }
+
+    public static function getFlash(string $key, string $default = ''): string
+    {
+        self::start();
+        $message = $default;
+        if (isset($_SESSION['_flash'][$key])) {
+            $message = $_SESSION['_flash'][$key];
+            unset($_SESSION['_flash'][$key]);
+        }
+        return $message;
+    }
+}

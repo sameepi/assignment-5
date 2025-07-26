@@ -91,7 +91,7 @@
                     </div>
                 <?php else: ?>
                     <div class="alert alert-info mb-0">
-                        <p class="mb-2">Please <a href="/login">login</a> or <a href="/register">register</a> to rate this movie and get AI-generated reviews!</p>
+                        <p class="mb-2">Please <a href="<?= url('/login') ?>">login</a> or <a href="<?= url('/register') ?>">register</a> to rate this movie and get AI-generated reviews!</p>
                     </div>
                 <?php endif; ?>
             </div>

@@ -9,6 +9,7 @@ require_once dirname(__DIR__) . '/src/bootstrap.php';
 
 require_once dirname(__DIR__) . '/src/autoload.php';
 
+use App\Controllers\AuthController;
 use App\Controllers\MovieController;
 use App\Core\Database;
 use App\Core\Router;
@@ -25,6 +26,14 @@ try {
 
 $router = new Router();
 
+// Authentication routes
+$router->get('/login', [AuthController::class, 'login']);
+$router->post('/login', [AuthController::class, 'login']);
+$router->get('/register', [AuthController::class, 'register']);
+$router->post('/register', [AuthController::class, 'register']);
+$router->get('/logout', [AuthController::class, 'logout']);
+
+// Movie routes
 $router->get('/', [MovieController::class, 'index']);
 $router->get('/movie', [MovieController::class, 'index']);
 $router->get('/movie/search', [MovieController::class, 'search']);
