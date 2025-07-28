@@ -1,9 +1,11 @@
 <?php
 
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
+// Register the autoloader
 spl_autoload_register(function ($class) {
-    // Debug: Log the class being loaded
-    error_log("Attempting to load class: $class");
-    
     // Project-specific namespace prefix
     $prefix = 'App\\';
     
@@ -14,7 +16,6 @@ spl_autoload_register(function ($class) {
     $len = strlen($prefix);
     if (strncmp($prefix, $class, $len) !== 0) {
         // No, move to the next registered autoloader
-        error_log("Class $class does not use prefix $prefix");
         return;
     }
     
@@ -26,18 +27,18 @@ spl_autoload_register(function ($class) {
     // with .php
     $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
     
-    error_log("Looking for class file: $file");
-    
     // If the file exists, require it
     if (file_exists($file)) {
-        error_log("Including file: $file");
         require $file;
-        
-        // Check if the class exists after including the file
-        if (!class_exists($class, false) && !interface_exists($class, false) && !trait_exists($class, false)) {
-            error_log("Class $class not found in file: $file");
-        }
-    } else {
-        error_log("File not found: $file");
     }
 });
+
+// Manually include the Session class to ensure it's always available
+if (!class_exists('App\\Core\\Session', false)) {
+    $sessionFile = __DIR__ . '/Core/Session.php';
+    if (file_exists($sessionFile)) {
+        require_once $sessionFile;
+    } else {
+        die('Critical error: Could not load Session class. File not found: ' . $sessionFile);
+    }
+}
